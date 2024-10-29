@@ -1,0 +1,12 @@
+name: Trigger a workflow on PR creation
+
+on:
+  pull_request:
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Placeholder
+    run: |
+      echo "Will add code checks here in next challenge"
