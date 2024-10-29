@@ -1,15 +1,15 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
 code: model
 command: >-
-  python 
-  --
-  --
+  python train.py
+  --training_data ${{inputs.training_data}}
+  --reg_rate ${{inputs.reg_rate}}
 inputs:
   training_data: 
     type: uri_folder 
-    path: 
+    path: azureml://subscriptions/cf8cebc1-45e2-4a8e-a4ec-b01521fed8e3/resourcegroups/rg-mt-mslearn/workspaces/ws-mt-mslearn/datastores/workspaceblobstore/paths/LocalUpload/534e63694838be564a42c83cb065f8fd/data/
   reg_rate: 0.01
 environment: azureml:AzureML-sklearn-0.24-ubuntu18.04-py37-cpu@latest
-compute: 
-experiment_name: 
-description: 
+compute: ci-mt-mslearn
+experiment_name: exp-mt-mslearn-train
+description: Train Model Job
