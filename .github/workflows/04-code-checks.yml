@@ -1,9 +1,16 @@
-# name: Code checks
+name: Code checks
 
-# on:
-#   workflow_dispatch:
+on:
+  workflow_dispatch:
 
-# jobs:
+jobs:
+  job1:
+    name: printing
+    runs-on: ubuntu-latest
+    steps:
+    - name: print something
+      run: |
+        echo "hello world"
 #   job1:
 #     name: linting
 #     runs-on: ubuntu-latest
