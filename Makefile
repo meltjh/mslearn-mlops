@@ -13,12 +13,6 @@ create_service_principal:
 		--scopes /subscriptions/${subscription_id}/resourceGroups/${resource_group_name} \
 		--sdk-auth
 
-create_jobs:
-	az ml job create \
-		--file ./src/job.yml \
-		--resource-group ${resource_group_name} \
-		--workspace-name ${workspace_name}
-
 create_basic_resources:
 	az group create -l ${region} --name ${resource_group_name}
 	az ml workspace create --name ws-mt-mslearn --resource-group ${resource_group_name}
@@ -26,13 +20,17 @@ create_basic_resources:
 create_cluster:
 	az ml compute create --file ./infra/compute_cluster.yml --resource-group ${resource_group_name} --workspace-name ${workspace_name}
 
-create_data_asset:
+create_data_assets:
 	az ml data create \
-		-f ./infra/data_asset.yml \
+		-f ./infra/data_asset_dev.yml \
+		--resource-group ${resource_group_name} \
+		--workspace-name ${workspace_name}
+	az ml data create \
+		-f ./infra/data_asset_prod.yml \
 		--resource-group ${resource_group_name} \
 		--workspace-name ${workspace_name}
 
-create_all: create_basic_resources create_cluster create_data_asset create_jobs create_service_principal
+create_all: create_basic_resources create_cluster create_data_assets create_service_principal
 
 # ----- delete resources
 
