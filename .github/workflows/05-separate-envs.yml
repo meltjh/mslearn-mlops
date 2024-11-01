@@ -5,6 +5,12 @@ on:
     branches:
       main
 
+
+env:
+  MODEL_NAME: diabetes-logreg-model
+  RUN_NAME: diabetes-experiment
+
+
 jobs:
   train-dev:
     environment: dev
@@ -20,7 +26,7 @@ jobs:
         creds: ${{secrets.AZURE_CREDENTIALS}}
     - name: Trigger Azure Machine Learning job
       run: |
-        az ml job create --file src/job_dev.yml --resource-group rg-mt-mslearn --workspace-name ws-mt-mslearn
+        az ml job create --name ${{ env.MODEL_NAME }}-dev --file src/job_dev.yml --set inputs.train_data.path= --resource-group rg-mt-mslearn --workspace-name ws-mt-mslearn
   train-prod:
     needs: train-dev
     environment: prod
@@ -37,12 +43,13 @@ jobs:
     - name: Trigger Azure Machine Learning job
       id: trigger_prod_job
       run: |
-        az ml job create --file src/job_prod.yml --resource-group rg-mt-mslearn --workspace-name ws-mt-mslearn
-    - name: Register model
-      uses: Azure/aml-registermodel@v1
-      id: aml_registermodel
-      with:
-        # required inputs
-        azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
-        run_id:  ${{ steps.trigger_prod_job.outputs.run_id }}
-        experiment_name: ${{ steps.trigger_prod_job.outputs.experiment_name }}
+        az ml job create --name ${{ env.MODEL_NAME }}-prod --file src/job_prod.yml --resource-group rg-mt-mslearn --workspace-name ws-mt-mslearn
+  deploy-prod:
+    needs: train-prod
+    environment: prod
+    runs-on: ubuntu-latest
+    steps:  
+    - name: Register Prod model
+      run: |
+          az ml model create --name ${{ env.MODEL_NAME }}-prod \
+          --path azureml://jobs/${{ env.RUN_NAME }}/outputs/artifacts/paths/model/
