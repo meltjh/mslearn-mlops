@@ -9,6 +9,10 @@ on:
 env:
   MODEL_NAME: diabetes-logreg-model
   RUN_NAME: diabetes-experiment
+  RESOURCE_GROUP: rg-mt-mslearn
+  WORKSPACE_NAME: ws-mt-mslearn
+  ENDPOINT_NAME: ep-mt-mslearn
+  DEPLOYMENT_NAME: model-deployment-mt-mslearn
 
 
 jobs:
@@ -26,7 +30,7 @@ jobs:
         creds: ${{secrets.AZURE_CREDENTIALS}}
     - name: Trigger Azure Machine Learning job
       run: |
-        az ml job create --name ${{ env.MODEL_NAME }}-dev --file src/job_dev.yml --resource-group rg-mt-mslearn --workspace-name ws-mt-mslearn
+        az ml job create --name ${{ env.MODEL_NAME }}-dev --file src/job_dev.yml --resource-group ${{ env.RESOURCE_GROUP }} --workspace-name ${{ env.WORKSPACE_NAME }}
   train-prod:
     needs: train-dev
     environment: prod
@@ -43,13 +47,27 @@ jobs:
     - name: Trigger Azure Machine Learning job
       id: trigger_prod_job
       run: |
-        az ml job create --name ${{ env.MODEL_NAME }}-prod --file src/job_prod.yml --resource-group rg-mt-mslearn --workspace-name ws-mt-mslearn
+        az ml job create --name ${{ env.MODEL_NAME }}-prod --file src/job_prod.yml --resource-group ${{ env.RESOURCE_GROUP }} --workspace-name ${{ env.WORKSPACE_NAME }}
   deploy-prod:
     needs: train-prod
     environment: prod
     runs-on: ubuntu-latest
-    steps:  
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@main
+    - name: Install az ml extension
+      run: az extension add -n ml -y
+    - name: Azure login
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
     - name: Register Prod model
       run: |
-          az ml model create --name ${{ env.MODEL_NAME }}-prod \
+        az ml model create --name ${{ env.MODEL_NAME }}-prod \
           --path azureml://jobs/${{ env.RUN_NAME }}/outputs/artifacts/paths/model/
+    - name: Create Endpoint
+      run: |
+        az ml online-endpoint create ${{ env.ENDPOINT_NAME }} --file endpoint.yml --resource-group ${{ env.RESOURCE_GROUP }} --workspace-name ${{ env.WORKSPACE_NAME }}
+    - name: Deploy Model
+      run: |
+        az ml model deploy --name ${{ env.DEPLOYMENT_NAME }} --model ${{ env.MODEL_NAME }}-prod --resource-group ${{ env.RESOURCE_GROUP }} --workspace-name ${{ env.WORKSPACE_NAME }}
