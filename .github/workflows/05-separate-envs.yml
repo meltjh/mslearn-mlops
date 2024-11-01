@@ -68,7 +68,7 @@ jobs:
         az ml model create --name ${{ env.MODEL_NAME_PROD }} --path azureml://jobs/${{ env.RUN_NAME_PROD }}/outputs/artifacts/paths/model/ --resource-group ${{ env.RESOURCE_GROUP_NAME }} --workspace-name ${{ env.WORKSPACE_NAME }}
     - name: Create Endpoint
       run: |
-        az ml online-endpoint create ${{ env.ENDPOINT_NAME }} --file endpoint.yml --resource-group ${{ env.RESOURCE_GROUP_NAME }} --workspace-name ${{ env.WORKSPACE_NAME }}
+        az ml online-endpoint create --name ${{ env.ENDPOINT_NAME }} --file endpoint.yml --resource-group ${{ env.RESOURCE_GROUP_NAME }} --workspace-name ${{ env.WORKSPACE_NAME }}
     - name: Deploy Model
       run: |
         az ml model deploy --name ${{ env.DEPLOYMENT_NAME }} --model ${{ env.MODEL_NAME_PROD }} --resource-group ${{ env.RESOURCE_GROUP_NAME }} --workspace-name ${{ env.WORKSPACE_NAME }}
