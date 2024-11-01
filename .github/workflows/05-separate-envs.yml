@@ -7,8 +7,10 @@ on:
 
 
 env:
-  MODEL_NAME: diabetes-logreg-model
-  RUN_NAME: diabetes-experiment
+  MODEL_NAME_DEV: diabetes-logreg-model-dev
+  RUN_NAME_DEV: diabetes-experiment-dev
+  MODEL_NAME_PROD: diabetes-logreg-model-prod
+  RUN_NAME_PROD: diabetes-experiment-prod
   RESOURCE_GROUP_NAME: rg-mt-mslearn
   WORKSPACE_NAME: ws-mt-mslearn
   ENDPOINT_NAME: ep-mt-mslearn
@@ -30,7 +32,7 @@ jobs:
         creds: ${{secrets.AZURE_CREDENTIALS}}
     - name: Trigger Azure Machine Learning job
       run: |
-        az ml job create --name ${{ env.MODEL_NAME }}-dev --file src/job_dev.yml --resource-group ${{ env.RESOURCE_GROUP_NAME }} --workspace-name ${{ env.WORKSPACE_NAME }}
+        az ml job create --name ${{ env.RUN_NAME_DEV }} --file src/job_dev.yml --resource-group ${{ env.RESOURCE_GROUP_NAME }} --workspace-name ${{ env.WORKSPACE_NAME }}
   train-prod:
     needs: train-dev
     environment: prod
@@ -47,7 +49,7 @@ jobs:
     - name: Trigger Azure Machine Learning job
       id: trigger_prod_job
       run: |
-        az ml job create --name ${{ env.MODEL_NAME }}-prod --file src/job_prod.yml --resource-group ${{ env.RESOURCE_GROUP_NAME }} --workspace-name ${{ env.WORKSPACE_NAME }}
+        az ml job create --name ${{ env.RUN_NAME_PROD }} --file src/job_prod.yml --resource-group ${{ env.RESOURCE_GROUP_NAME }} --workspace-name ${{ env.WORKSPACE_NAME }}
   deploy-prod:
     needs: train-prod
     environment: prod
@@ -63,11 +65,11 @@ jobs:
         creds: ${{secrets.AZURE_CREDENTIALS}}
     - name: Register Prod model
       run: |
-        az ml model create --name ${{ env.MODEL_NAME }}-prod \
-          --path azureml://jobs/${{ env.RUN_NAME }}/outputs/artifacts/paths/model/
+        az ml model create --name ${{ env.MODEL_NAME_PROD }} \
+          --path azureml://jobs/${{ env.RUN_NAME_PROD }}/outputs/artifacts/paths/model/
     - name: Create Endpoint
       run: |
         az ml online-endpoint create ${{ env.ENDPOINT_NAME }} --file endpoint.yml --resource-group ${{ env.RESOURCE_GROUP_NAME }} --workspace-name ${{ env.WORKSPACE_NAME }}
     - name: Deploy Model
       run: |
-        az ml model deploy --name ${{ env.DEPLOYMENT_NAME }} --model ${{ env.MODEL_NAME }}-prod --resource-group ${{ env.RESOURCE_GROUP_NAME }} --workspace-name ${{ env.WORKSPACE_NAME }}
+        az ml model deploy --name ${{ env.DEPLOYMENT_NAME }} --model ${{ env.MODEL_NAME_PROD }} --resource-group ${{ env.RESOURCE_GROUP_NAME }} --workspace-name ${{ env.WORKSPACE_NAME }}
